@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Send, Bot, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { config } from '@/config';
 
 interface Message {
   id: string;
@@ -24,7 +25,7 @@ export const OpenAIChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState('gpt-3.5-turbo');
+  const [model, setModel] = useState('gemini-2.5-flash');
   const [usage, setUsage] = useState<Usage | null>(null);
   const { token } = useAuth();
 
@@ -43,7 +44,7 @@ export const OpenAIChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/openai/chat', {
+      const response = await fetch(`${config.API_BASE_URL}/openai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ export const OpenAIChat = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Bot className="w-5 h-5" />
-              OpenAI Chat
+              AI Chat (Powered by Google Gemini - FREE!)
             </CardTitle>
             <div className="flex items-center gap-2">
               <select
@@ -123,9 +124,9 @@ export const OpenAIChat = () => {
                 onChange={(e) => setModel(e.target.value)}
                 className="px-3 py-1 text-sm border rounded-md bg-background"
               >
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash (FREE & Fast!)</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro (FREE & Powerful!)</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash (FREE)</option>
               </select>
               <Button variant="outline" size="sm" onClick={clearChat}>
                 Clear

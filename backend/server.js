@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const yaml = require('js-yaml');
 const nodemailer = require('nodemailer');
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { OAuth2Client } = require('google-auth-library');
 const { supabaseAdmin, supabase } = require('./config/supabase');
 const { User, Project, ApiSpec, GeneratedArtifact, Notification, AuditLog } = require('./models');
@@ -17,15 +17,15 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Initialize OpenAI client (optional)
-let openai = null;
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-  });
-  console.log('🤖 OpenAI integration enabled');
+// Initialize Google Gemini AI client (FREE!)
+let genAI = null;
+let geminiModel = null;
+if (process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); // Stable and reliable!
+  console.log('🤖 Google Gemini 2.0 Flash AI integration enabled (FREE!)');
 } else {
-  console.log('⚠️ OpenAI API key not found - OpenAI features disabled');
+  console.log('⚠️ Gemini API key not found - AI features disabled');
 }
 
 // Initialize Google OAuth client
@@ -1082,39 +1082,77 @@ app.put('/api/notifications/:id/read', authenticateToken, async (req, res) => {
   }
 });
 
-// OpenAI API Routes
-app.post('/api/openai/chat', authenticateToken, async (req, res) => {
-  if (!openai) {
+// Google Gemini AI Chat Routes (public - no auth required - FREE!)
+app.post('/api/openai/chat', async (req, res) => {
+  if (!geminiModel) {
     return res.status(503).json({ 
-      error: 'OpenAI integration not available', 
-      message: 'Please set OPENAI_API_KEY environment variable' 
+      error: 'AI integration not available', 
+      message: 'Please set GEMINI_API_KEY environment variable' 
     });
   }
 
   try {
-    const { messages, model = 'gpt-3.5-turbo', max_tokens = 1000 } = req.body;
+    const { messages, model = 'gemini-2.5-flash', max_tokens = 1000 } = req.body;
     
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    const completion = await openai.chat.completions.create({
-      model,
-      messages,
-      max_tokens,
-      temperature: 0.7
+    // Convert OpenAI-style messages to Gemini format
+    // Gemini expects a conversation history
+    let prompt = '';
+    messages.forEach(msg => {
+      if (msg.role === 'system') {
+        prompt += `System: ${msg.content}\n\n`;
+      } else if (msg.role === 'user') {
+        prompt += `User: ${msg.content}\n\n`;
+      } else if (msg.role === 'assistant') {
+        prompt += `Assistant: ${msg.content}\n\n`;
+      }
     });
 
-    res.json({
-      success: true,
-      response: completion.choices[0].message.content,
-      usage: completion.usage
-    });
+    // Get the last user message as the prompt
+    const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+    const userPrompt = lastUserMsg ? lastUserMsg.content : prompt;
+
+    // Retry logic for overloaded servers (up to 3 attempts)
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await geminiModel.generateContent(userPrompt);
+        const response = await result.response;
+        const text = response.text();
+
+        return res.json({
+          success: true,
+          response: text,
+          usage: {
+            prompt_tokens: userPrompt.length / 4, // Approximate
+            completion_tokens: text.length / 4,    // Approximate
+            total_tokens: (userPrompt.length + text.length) / 4
+          }
+        });
+      } catch (error) {
+        lastError = error;
+        
+        // If server is overloaded (503), wait and retry
+        if (error.status === 503 && attempt < 3) {
+          console.log(`🔄 Gemini server busy, retrying (${attempt}/3)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Wait 1s, 2s
+          continue;
+        }
+        
+        // For other errors or last attempt, throw
+        throw error;
+      }
+    }
   } catch (error) {
-    console.error('OpenAI API Error:', error);
+    console.error('Gemini AI API Error:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ 
-      error: 'OpenAI API request failed', 
-      details: error.message 
+      error: 'AI API request failed', 
+      details: error.message || 'The AI service is temporarily unavailable. Please try again.',
+      tip: error.status === 503 ? 'The AI is very popular right now! Please try again in a few seconds.' : undefined
     });
   }
 });

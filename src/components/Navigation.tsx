@@ -135,6 +135,18 @@ export const Navigation = () => {
                               <div className="text-sm text-gray-400">Generate your MCP server code</div>
                             </div>
                           </Link>
+                          <Link to="/openai-chat" className="flex items-start gap-3 group">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded flex items-center justify-center group-hover:from-blue-500 group-hover:to-purple-500 transition-colors">
+                              <Bot className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-white flex items-center gap-2">
+                                AI Chat
+                                <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded font-bold">FREE</span>
+                              </div>
+                              <div className="text-sm text-gray-400">Google Gemini 2.5 Flash</div>
+                            </div>
+                          </Link>
                         </div>
                       </div>
                     </div>
