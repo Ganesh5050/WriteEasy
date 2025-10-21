@@ -1,0 +1,120 @@
+{
+  "name": "writeasy - AI-Native API Platform",
+  "short_name": "writeasy",
+  "description": "Build, test, and deploy AI-native APIs with ease. Generate SDKs, MCP servers, and Terraform providers from OpenAPI specifications.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["developer", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "OpenAPI Editor",
+      "short_name": "Editor",
+      "description": "Edit and validate OpenAPI specifications",
+      "url": "/editor",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "SDK Generator",
+      "short_name": "SDK",
+      "description": "Generate SDKs for multiple languages",
+      "url": "/sdk-generator",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "API Tester",
+      "short_name": "Tester",
+      "description": "Test your APIs with realistic responses",
+      "url": "/api-tester",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Project Dashboard",
+      "short_name": "Dashboard",
+      "description": "Manage your projects and collaborate",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "writeasy Dashboard"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "writeasy Mobile"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "handle_links": "preferred",
+  "capture_links": "new-client",
+  "file_handlers": [
+    {
+      "action": "/editor",
+      "accept": {
+        "application/json": [".json"],
+        "application/x-yaml": [".yaml", ".yml"],
+        "text/yaml": [".yaml", ".yml"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+writeasy",
+      "url": "/editor?spec=%s"
+    }
+  ]
+}
