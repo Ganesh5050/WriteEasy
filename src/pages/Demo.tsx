@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { config } from "@/config";
 import { 
   Calendar, 
   Clock, 
@@ -26,6 +29,77 @@ import {
 } from "lucide-react";
 
 export const Demo = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    company: '',
+    role: '',
+    demoType: '',
+    message: ''
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields (name and email)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/demo-requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: "Demo Request Submitted! 🎉",
+          description: "Thank you! We'll get back to you within 24 hours.",
+        });
+        
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          company: '',
+          role: '',
+          demoType: '',
+          message: ''
+        });
+      } else {
+        throw new Error(result.error || 'Failed to submit demo request');
+      }
+    } catch (error) {
+      console.error('Demo request error:', error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const demoTypes = [
     {
       title: "Platform Overview",
@@ -263,33 +337,42 @@ export const Demo = () => {
             
             <Card>
               <CardContent className="p-8">
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">First Name *</Label>
                       <Input
                         id="firstName"
                         placeholder="John"
                         className="mt-2"
+                        value={formData.firstName}
+                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName">Last Name *</Label>
                       <Input
                         id="lastName"
                         placeholder="Doe"
                         className="mt-2"
+                        value={formData.lastName}
+                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        required
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="john@example.com"
                       className="mt-2"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      required
                     />
                   </div>
                   
@@ -299,12 +382,14 @@ export const Demo = () => {
                       id="company"
                       placeholder="Acme Corp"
                       className="mt-2"
+                      value={formData.company}
+                      onChange={(e) => handleInputChange('company', e.target.value)}
                     />
                   </div>
                   
                   <div>
                     <Label htmlFor="role">Role</Label>
-                    <Select>
+                    <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select your role" />
                       </SelectTrigger>
@@ -320,7 +405,7 @@ export const Demo = () => {
                   
                   <div>
                     <Label htmlFor="demoType">Demo Type</Label>
-                    <Select>
+                    <Select value={formData.demoType} onValueChange={(value) => handleInputChange('demoType', value)}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Choose demo type" />
                       </SelectTrigger>
@@ -339,6 +424,8 @@ export const Demo = () => {
                       id="message"
                       placeholder="What APIs are you building? What challenges are you facing?"
                       className="mt-2 min-h-[120px]"
+                      value={formData.message}
+                      onChange={(e) => handleInputChange('message', e.target.value)}
                     />
                   </div>
                   
@@ -346,14 +433,10 @@ export const Demo = () => {
                     type="submit" 
                     className="w-full" 
                     size="lg"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // In a real app, this would submit the form to a backend
-                      alert('Demo request submitted! We\'ll get back to you within 24 hours.');
-                    }}
+                    disabled={isSubmitting}
                   >
                     <Calendar className="w-4 h-4 mr-2" />
-                    Schedule Demo
+                    {isSubmitting ? 'Submitting...' : 'Schedule Demo'}
                   </Button>
                 </form>
               </CardContent>

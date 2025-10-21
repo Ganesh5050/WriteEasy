@@ -1273,7 +1273,66 @@ app.get('/api/openai/test', authenticateToken, async (req, res) => {
   }
 });
 
-// Error handling middleware
+// =====================
+// Demo Request Routes
+// =====================
+
+// Submit demo request (public endpoint - no auth required)
+app.post('/api/demo-requests', async (req, res) => {
+  try {
+    const { firstName, lastName, email, company, role, demoType, message } = req.body;
+    
+    // Validate required fields
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ error: 'First name, last name, and email are required' });
+    }
+    
+    // Use admin client to bypass RLS for public demo submissions
+    const { data, error } = await supabaseAdmin
+      .from('demo_requests')
+      .insert([{
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        company: company || null,
+        role: role || null,
+        demo_type: demoType || null,
+        message: message || null
+      }])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Demo request error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Demo request submitted:', data.id);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Demo request submission failed:', error);
+    res.status(500).json({ error: 'Failed to submit demo request' });
+  }
+});
+
+// Get all demo requests (admin only - for now, anyone can view)
+app.get('/api/demo-requests', authenticateToken, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('demo_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Failed to fetch demo requests:', error);
+    res.status(500).json({ error: 'Failed to fetch demo requests' });
+  }
+});
+
+// Error handling middleware (MUST be last!)
 app.use((error, req, res, next) => {
   console.error('Server Error:', error);
   res.status(500).json({ error: 'Internal server error' });
