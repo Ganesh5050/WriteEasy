@@ -40,7 +40,9 @@ app.use(cors({
     'http://localhost:8082',
     'http://localhost:8083',
     'http://localhost:8084',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    /\.vercel\.app$/,  // Allow all Vercel deployments
+    /\.onrender\.com$/ // Allow Render deployments
   ],
   credentials: true
 }));
